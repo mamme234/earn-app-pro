@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Earn App Pro</title>
+<style>
+body{margin:0;font-family:Arial;background:#000;color:#fff;text-align:center;}
+.card{background:#111;margin:10px;padding:15px;border-radius:15px;}
+.item{background:#111;margin:10px;padding:15px;border-radius:12px;cursor:pointer;}
+#coinBtn{
+  width:160px;height:160px;margin:20px auto;border-radius:50%;
+  background:url('https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg') center/cover;
+  box-shadow:0 0 20px gold;
+}
+.float{position:absolute;color:gold;font-weight:bold;transition: all 0.5s ease;}
+#nav{position:fixed;bottom:0;width:100%;display:flex;justify-content:space-around;background:#111;}
+button{padding:10px;border:none;border-radius:10px;background:gold;cursor:pointer;}
+.screen{display:none;}
+.active{display:block;}
+a{color:gold;text-decoration:none;}
+img.profilePic{width:50px;height:50px;border-radius:50%;}
+</style>
+</head>
+<body>
+
+<!-- 🔒 YOUTUBE LOCK -->
+<div id="lockScreen" style="position:fixed;width:100%;height:100%;background:#000;z-index:9999;">
+  <h2>Subscribe First</h2>
+  <button onclick="window.open('https://www.youtube.com/@Mamme234')">Subscribe</button>
+  <button onclick="unlock()">I Subscribed</button>
+</div>
+
+<!-- HOME -->
+<div id="home" class="screen active">
+  <div class="card">
+    <h2>💰 Balance</h2>
+    <div id="balance">0</div>
+    <div>Level: <span id="level">1</span></div>
+    <div>USDT: <span id="usdt">0</span></div>
+    <div>Coins: <span id="coins">0</span></div>
+  </div>
+  <div id="coinBtn"></div>
+  <div class="card">
+    <div>Next Level</div>
+    <div style="background:#333">
+      <div id="progress" style="height:10px;background:gold;width:10%"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div id="profile" class="screen">
+  <div class="card">
+    <h3>👤 Profile</h3>
+    <div id="username">User</div>
+    <div id="telegramId"></div>
+    <img id="profilePic" class="profilePic" src="" alt="">
+  </div>
+
+  <div class="item" onclick="daily()">🎁 Daily Reward</div>
+  <div class="item" onclick="spin()">🎡 Spin</div>
+
+  <div class="card">
+    <h3>👥 Referral</h3>
+    <a id="refLink" href="#" target="_blank">Invite Friends</a>
+    <div>Invites: <span id="refCount">0</span></div>
+  </div>
+
+  <div class="card">
+    <h3>🔥 Ads</h3>
+    <div class="item" onclick="adClick('https://shrinkme.click/WuexXJf6')">Ad 1 (+500)</div>
+    <div class="item" onclick="adClick('https://shrinkme.click/CCysG')">Ad 2 (+500)</div>
+    <div class="item" onclick="adClick('https://shrinkme.click/kaJ1Qm4')">Ad 3 (+500)</div>
+    <div class="item" onclick="adClick('https://shrinkme.click/X1irQj')">Ad 4 (+500)</div>
+    <div class="item" onclick="adClick('https://shrinkme.click/nhEYM30')">Ad 5 (+500)</div>
+  </div>
+</div>
+
+<!-- WITHDRAW -->
+<div id="withdraw" class="screen">
+  <div class="card">
+    <h3>Withdraw</h3>
+    <input id="wallet" placeholder="User Wallet">
+    <input id="amount" placeholder="Amount USDT">
+    <button onclick="withdraw()">Submit</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<div id="nav">
+  <button onclick="show('home')">Home</button>
+  <button onclick="show('profile')">Profile</button>
+  <button onclick="show('withdraw')">Withdraw</button>
+</div>
+
+<script>
+const API = "https://earn-app-yfo7.onrender.com";
+let user_id = Math.floor(Math.random()*1000000);
+let balance=0, coins=0, lastTap=0, lastSpin=0;
+
+// Unlock YouTube subscription
+function unlock(){
+  localStorage.setItem("sub","yes");
+  document.getElementById("lockScreen").style.display="none";
+}
+if(localStorage.getItem("sub")) document.getElementById("lockScreen").style.display="none";
+
+// Navigation
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+// Update UI
+function update(){
+  document.getElementById("balance").innerText = balance;
+  document.getElementById("coins").innerText = coins;
+  document.getElementById("level").innerText = Math.floor(balance/10);
+  document.getElementById("progress").style.width = ((balance%10)*10)+"%";
+  document.getElementById("usdt").innerText = (balance*0.01).toFixed(2);
+}
+
+// Load user info from backend
+async function load(){
+  try{
+    let res = await fetch(`${API}/get_user?user_id=${user_id}`);
+    let data = await res.json();
+    balance = data.balance || 0;
+    coins = data.balance || 0;
+    document.getElementById("refCount").innerText = data.referrals || 0;
+    document.getElementById("refLink").href = `https://t.me/Studybuddy_2025Bot?start=${user_id}`;
+    if(data.telegram){
+      document.getElementById("telegramId").innerText = `Telegram: @${data.telegram.username}`;
+      if(data.telegram.photo) document.getElementById("profilePic").src = data.telegram.photo;
+    }
+    update();
+  }catch(e){console.log(e);}
+}
+load();
+
+// Tap coin
+document.getElementById("coinBtn").onclick = async (e)=>{
+  let now = Date.now();
+  if(now-lastTap<300) return;
+  lastTap = now;
+  coins += 1;
+  balance += 1;
+
+  let f=document.createElement("div");
+  f.className="float"; f.innerText="+1";
+  f.style.left=e.pageX+"px"; f.style.top=e.pageY+"px";
+  document.body.appendChild(f);
+  setTimeout(()=>f.remove(),500);
+
+  try{
+    await fetch(`${API}/tap_coin`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id})
+    });
+    load();
+  }catch(e){console.log(e);}
+};
+
+// Daily reward
+async function daily(){
+  try{
+    let res = await fetch(`${API}/daily`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id})
+    });
+    let data = await res.json();
+    if(data.success){
+      balance = data.balance;
+      coins = data.balance;
+      update();
+      alert("Daily reward added");
+    }else alert(data.message);
+  }catch(e){console.log(e);}
+}
+
+// Spin wheel
+async function spin(){
+  let now = Date.now();
+  if(now-lastSpin<60000){alert("Wait a minute"); return;}
+  lastSpin = now;
+  try{
+    let res = await fetch(`${API}/spin`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id})
+    });
+    let data = await res.json();
+    if(data.win>0){
+      balance += data.win;
+      coins += data.win;
+      update();
+      alert("Won "+data.win+" coins");
+    } else alert("Try again");
+  }catch(e){console.log(e);}
+}
+
+// Ads click
+async function adClick(url){
+  window.open(url);
+  try{
+    let res = await fetch(`${API}/ad_reward`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id})
+    });
+    let data = await res.json();
+    if(data.success){ balance = data.balance; coins = data.balance; update();}
+  }catch(e){console.log(e);}
+}
+
+// Withdraw
+async function withdraw(){
+  let amt = parseFloat(document.getElementById("amount").value);
+  let wallet = document.getElementById("wallet").value;
+  if(!wallet){ alert("Enter your wallet address"); return;}
+  try{
+    let res = await fetch(`${API}/get_user?user_id=${user_id}`);
+    let data = await res.json();
+    if(data.referrals < 10){ alert("Invite 10 users who started the bot"); return;}
+    if(amt < 20){ alert("Minimum withdrawal 20 USDT"); return;}
+    alert("Request sent");
+  }catch(e){console.log(e);}
+}
+</script>
+
+</body>
+</html>
