@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reward App</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #000;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #00ffcc;
+    }
+
+    #coins {
+      font-size: 24px;
+      margin: 15px;
+      color: gold;
+    }
+
+    button {
+      background: #00ffcc;
+      color: #000;
+      border: none;
+      padding: 15px 25px;
+      margin: 10px;
+      font-size: 16px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #00e6b8;
+    }
+
+    #rewardInfo {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #ff0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>💰 Earn Coins App</h1>
+
+  <div id="coins">Coins: 0</div>
+
+  <p>Follow to earn rewards 👇</p>
+
+  <button id="followTelegram">📢 Follow Telegram (500)</button>
+  <button id="followTikTok">🎵 Follow TikTok (1000)</button>
+
+  <br><br>
+
+  <button onclick="canWithdraw()">💸 Withdraw</button>
+
+  <p id="rewardInfo"></p>
+
+  <script>
+    // Initialize coins
+    if(!localStorage.getItem('coins')) {
+      localStorage.setItem('coins', 0);
+    }
+
+    function updateCoins() {
+      document.getElementById('coins').innerText =
+        "Coins: " + localStorage.getItem('coins');
+    }
+
+    updateCoins();
+
+    // Telegram
+    document.getElementById('followTelegram').onclick = function() {
+      window.open('https://t.me/gangs234', '_blank');
+
+      if(!localStorage.getItem('telegramFollowed')){
+        localStorage.setItem('telegramFollowed', 'true');
+
+        let coins = parseInt(localStorage.getItem('coins'));
+        coins += 500;
+
+        localStorage.setItem('coins', coins);
+
+        document.getElementById('rewardInfo').innerText =
+          "✅ Telegram reward added! +500 coins";
+
+        updateCoins();
+      } else {
+        document.getElementById('rewardInfo').innerText =
+          "⚠ Already claimed Telegram reward";
+      }
+    }
+
+    // TikTok
+    document.getElementById('followTikTok').onclick = function() {
+      window.open('https://www.tiktok.com/@mammeliyas', '_blank');
+
+      if(!localStorage.getItem('tiktokFollowed')){
+        localStorage.setItem('tiktokFollowed', 'true');
+
+        let coins = parseInt(localStorage.getItem('coins'));
+        coins += 1000;
+
+        localStorage.setItem('coins', coins);
+
+        document.getElementById('rewardInfo').innerText =
+          "✅ TikTok reward added! +1000 coins";
+
+        updateCoins();
+      } else {
+        document.getElementById('rewardInfo').innerText =
+          "⚠ Already claimed TikTok reward";
+      }
+    }
+
+    // Withdraw lock
+    function canWithdraw() {
+      if(localStorage.getItem('telegramFollowed') &&
+         localStorage.getItem('tiktokFollowed')) {
+
+        alert("🎉 Withdraw unlocked! Coins: " + localStorage.getItem('coins'));
+
+      } else {
+        alert("❌ You must follow BOTH Telegram and TikTok!");
+      }
+    }
+  </script>
+
+</body>
+  </html>
